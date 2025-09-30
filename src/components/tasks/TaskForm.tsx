@@ -34,13 +34,25 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
         return;
       }
 
-      const { error } = await supabase.from("tasks").insert({
+      const { data: newTask, error } = await supabase.from("tasks").insert({
         user_id: user.id,
         name,
         description,
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Call edge function to prioritize the task
+      if (newTask && description) {
+        try {
+          await supabase.functions.invoke('prioritize-task', {
+            body: { taskId: newTask.id, description }
+          });
+        } catch (priorityError: any) {
+          console.error('Priority error:', priorityError);
+          // Don't fail the whole operation if prioritization fails
+        }
+      }
 
       toast({ title: "Task created successfully!" });
       setName("");

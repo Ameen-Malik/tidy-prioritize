@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -8,6 +9,8 @@ interface Task {
   name: string;
   description: string | null;
   completed: boolean;
+  priority: string | null;
+  priority_reasoning: string | null;
 }
 
 interface TaskCardProps {
@@ -41,6 +44,19 @@ export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
     }
   };
 
+  const getPriorityColor = (priority: string | null) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-500/10 text-red-700 border-red-300';
+      case 'medium':
+        return 'bg-yellow-500/10 text-yellow-700 border-yellow-300';
+      case 'low':
+        return 'bg-green-500/10 text-green-700 border-green-300';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
     <Card className="shadow-sm border-border/50 hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-4">
@@ -50,14 +66,21 @@ export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
             onCheckedChange={handleToggleComplete}
             className="mt-1"
           />
-          <div className="flex-1 space-y-1">
-            <h3
-              className={`font-medium ${
-                task.completed ? "line-through text-muted-foreground" : "text-foreground"
-              }`}
-            >
-              {task.name}
-            </h3>
+          <div className="flex-1 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <h3
+                className={`font-medium ${
+                  task.completed ? "line-through text-muted-foreground" : "text-foreground"
+                }`}
+              >
+                {task.name}
+              </h3>
+              {task.priority && (
+                <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                  {task.priority}
+                </Badge>
+              )}
+            </div>
             {task.description && (
               <p
                 className={`text-sm ${
@@ -65,6 +88,11 @@ export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
                 }`}
               >
                 {task.description}
+              </p>
+            )}
+            {task.priority_reasoning && (
+              <p className="text-xs text-muted-foreground italic">
+                {task.priority_reasoning}
               </p>
             )}
           </div>

@@ -1,1 +1,4 @@
 project_id = "ufzlxiklykghyheiylyn"
+
+[functions.prioritize-task]
+verify_jwt = false

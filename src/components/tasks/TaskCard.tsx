@@ -59,31 +59,31 @@ export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
 
   return (
     <Card className="shadow-sm border-border/50 hover:shadow-md transition-shadow duration-200">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
           <Checkbox
             checked={task.completed}
             onCheckedChange={handleToggleComplete}
-            className="mt-1"
+            className="mt-1 flex-shrink-0"
           />
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 min-w-0 space-y-2">
             <div className="flex items-start justify-between gap-2">
               <h3
-                className={`font-medium ${
+                className={`font-medium text-sm sm:text-base break-words ${
                   task.completed ? "line-through text-muted-foreground" : "text-foreground"
                 }`}
               >
                 {task.name}
               </h3>
               {task.priority && (
-                <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                <Badge variant="outline" className={`${getPriorityColor(task.priority)} flex-shrink-0 text-xs`}>
                   {task.priority}
                 </Badge>
               )}
             </div>
             {task.description && (
               <p
-                className={`text-sm ${
+                className={`text-xs sm:text-sm break-words ${
                   task.completed ? "line-through text-muted-foreground" : "text-muted-foreground"
                 }`}
               >
@@ -91,7 +91,7 @@ export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
               </p>
             )}
             {task.priority_reasoning && (
-              <p className="text-xs text-muted-foreground italic">
+              <p className="text-xs text-muted-foreground italic break-words">
                 {task.priority_reasoning}
               </p>
             )}

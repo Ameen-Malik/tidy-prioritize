@@ -48,7 +48,7 @@ export const TaskList = ({ refresh }: { refresh: number }) => {
 
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
         ))}
@@ -78,7 +78,7 @@ export const TaskList = ({ refresh }: { refresh: number }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex justify-end">
         <Button
           variant="outline"
@@ -87,10 +87,11 @@ export const TaskList = ({ refresh }: { refresh: number }) => {
           className="gap-2"
         >
           <ArrowUpDown className="w-4 h-4" />
-          {sortByPriority ? "Sort by Date" : "Sort by Priority"}
+          <span className="hidden sm:inline">{sortByPriority ? "Sort by Date" : "Sort by Priority"}</span>
+          <span className="sm:hidden">Sort</span>
         </Button>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {sortedTasks.map((task) => (
           <TaskCard key={task.id} task={task} onTaskUpdated={fetchTasks} />
         ))}

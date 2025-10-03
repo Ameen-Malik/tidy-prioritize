@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
+import { Plus, Mic, MicOff } from "lucide-react";
+import { useVoiceInput } from "@/hooks/use-voice-input";
 
 interface TaskFormProps {
   onTaskAdded: () => void;
@@ -16,7 +17,31 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [voiceField, setVoiceField] = useState<'name' | 'description' | null>(null);
   const { toast } = useToast();
+  const { isListening, transcript, error, startListening, stopListening, resetTranscript } = useVoiceInput();
+
+  useEffect(() => {
+    if (transcript && voiceField) {
+      if (voiceField === 'name') {
+        setName(transcript);
+      } else if (voiceField === 'description') {
+        setDescription(transcript);
+      }
+      resetTranscript();
+      setVoiceField(null);
+    }
+  }, [transcript, voiceField, resetTranscript]);
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Voice input error",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +94,15 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
     }
   };
 
+  const handleVoiceInput = (field: 'name' | 'description') => {
+    if (isListening) {
+      stopListening();
+    } else {
+      setVoiceField(field);
+      startListening();
+    }
+  };
+
   return (
     <Card className="shadow-md border-border/50">
       <CardHeader>
@@ -81,23 +115,56 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Task Name</Label>
-            <Input
-              id="name"
-              placeholder="Enter task name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            <div className="flex gap-2">
+              <Input
+                id="name"
+                placeholder="Enter task name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant={isListening && voiceField === 'name' ? "destructive" : "outline"}
+                size="icon"
+                onClick={() => handleVoiceInput('name')}
+                disabled={isListening && voiceField !== 'name'}
+              >
+                {isListening && voiceField === 'name' ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Enter task description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
+            <div className="flex gap-2">
+              <Textarea
+                id="description"
+                placeholder="Enter task description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant={isListening && voiceField === 'description' ? "destructive" : "outline"}
+                size="icon"
+                onClick={() => handleVoiceInput('description')}
+                disabled={isListening && voiceField !== 'description'}
+                className="self-start"
+              >
+                {isListening && voiceField === 'description' ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Adding..." : "Add Task"}

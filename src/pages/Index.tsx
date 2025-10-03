@@ -54,20 +54,20 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-foreground">TaskPrioritizer</h1>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">TaskPrioritizer</h1>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
+            <LogOut className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sign Out</span>
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 max-w-6xl">
         <TaskForm onTaskAdded={handleTaskAdded} />
         
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-foreground">Your Tasks</h2>
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-foreground">Your Tasks</h2>
           <TaskList refresh={refreshTasks} />
         </div>
       </main>

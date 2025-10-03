@@ -42,8 +42,8 @@ export const AuthForm = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-semibold">TaskPrioritizer</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-xl sm:text-2xl font-semibold">TaskPrioritizer</CardTitle>
+          <CardDescription className="text-sm">
             {isLogin ? "Sign in to your account" : "Create a new account"}
           </CardDescription>
         </CardHeader>

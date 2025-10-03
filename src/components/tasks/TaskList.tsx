@@ -4,6 +4,7 @@ import { TaskCard } from "./TaskCard";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
+import { format } from "date-fns";
 
 interface Task {
   id: string;
@@ -13,9 +14,16 @@ interface Task {
   created_at: string;
   priority: string | null;
   priority_reasoning: string | null;
+  due_date: string | null;
 }
 
-export const TaskList = ({ refresh }: { refresh: number }) => {
+interface TaskListProps {
+  refresh: number;
+  todayOnly?: boolean;
+  date?: Date;
+}
+
+export const TaskList = ({ refresh, todayOnly = false, date }: TaskListProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortByPriority, setSortByPriority] = useState(false);
@@ -23,10 +31,19 @@ export const TaskList = ({ refresh }: { refresh: number }) => {
 
   const fetchTasks = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
+
+      if (todayOnly) {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        query = query.or(`due_date.eq.${today},due_date.is.null`).eq("completed", false);
+      } else if (date) {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        query = query.eq("due_date", dateStr);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -44,7 +61,7 @@ export const TaskList = ({ refresh }: { refresh: number }) => {
 
   useEffect(() => {
     fetchTasks();
-  }, [refresh]);
+  }, [refresh, todayOnly, date]);
 
   if (loading) {
     return (

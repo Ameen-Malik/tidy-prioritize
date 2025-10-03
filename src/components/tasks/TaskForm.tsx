@@ -6,8 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Mic, MicOff } from "lucide-react";
+import { Plus, Mic, MicOff, CalendarIcon } from "lucide-react";
 import { useVoiceInput } from "@/hooks/use-voice-input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface TaskFormProps {
   onTaskAdded: () => void;
@@ -16,6 +20,7 @@ interface TaskFormProps {
 export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState<Date>();
   const [loading, setLoading] = useState(false);
   const [voiceField, setVoiceField] = useState<'name' | 'description' | null>(null);
   const { toast } = useToast();
@@ -63,6 +68,7 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
         user_id: user.id,
         name,
         description,
+        due_date: dueDate ? format(dueDate, 'yyyy-MM-dd') : null,
       }).select().single();
 
       if (error) throw error;
@@ -80,9 +86,10 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
       }
 
       toast({ title: "Task created successfully!" });
-      setName("");
-      setDescription("");
-      onTaskAdded();
+    setName("");
+    setDescription("");
+    setDueDate(undefined);
+    onTaskAdded();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -166,6 +173,35 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
               </Button>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">Due Date (Optional)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="dueDate"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dueDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dueDate ? format(dueDate, "PPP") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={setDueDate}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Adding..." : "Add Task"}
           </Button>

@@ -4,8 +4,11 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { TaskList } from "@/components/tasks/TaskList";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { VoiceAssistant } from "@/components/tasks/VoiceAssistant";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
@@ -52,14 +55,29 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <header className="border-b border-border/50 bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">TaskPrioritizer</h1>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </Button>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground">TaskPrioritizer</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {format(new Date(), "EEEE, MMMM d")}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link to="/calendar">
+                <Button variant="ghost" size="sm">
+                  <CalendarIcon className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Calendar</span>
+                </Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -67,10 +85,12 @@ const Index = () => {
         <TaskForm onTaskAdded={handleTaskAdded} />
         
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-foreground">Your Tasks</h2>
-          <TaskList refresh={refreshTasks} />
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-foreground">Today's Tasks</h2>
+          <TaskList refresh={refreshTasks} todayOnly />
         </div>
       </main>
+
+      <VoiceAssistant onTaskCreated={handleTaskAdded} />
     </div>
   );
 };

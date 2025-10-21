@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +48,8 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
     }
   }, [error, toast]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Memoize handleSubmit to prevent recreation on every render
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -99,16 +100,17 @@ export const TaskForm = ({ onTaskAdded }: TaskFormProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [name, description, dueDate, toast, onTaskAdded]);
 
-  const handleVoiceInput = (field: 'name' | 'description') => {
+  // Memoize handleVoiceInput to prevent recreation on every render
+  const handleVoiceInput = useCallback((field: 'name' | 'description') => {
     if (isListening) {
       stopListening();
     } else {
       setVoiceField(field);
       startListening();
     }
-  };
+  }, [isListening, stopListening, startListening]);
 
   return (
     <Card className="shadow-md border-border/50">

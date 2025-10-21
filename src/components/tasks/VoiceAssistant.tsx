@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Mic, MicOff, Send } from "lucide-react";
@@ -24,6 +24,43 @@ export const VoiceAssistant = ({ onTaskCreated }: VoiceAssistantProps) => {
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
 
+  // Memoize handlers to prevent unnecessary re-renders
+  // Define before useEffect so it can be used in speech recognition setup
+  const handleUserMessage = useCallback(async (content: string) => {
+    setIsListening(false);
+    const userMessage: Message = { role: "user", content };
+    setMessages(prev => [...prev, userMessage]);
+    setIsProcessing(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('chat-task-assistant', {
+        body: { messages: [...messages, userMessage] }
+      });
+
+      if (error) throw error;
+
+      setMessages(prev => [...prev, data.message]);
+
+      if (data.task_created) {
+        onTaskCreated();
+        toast({
+          title: "Task Created",
+          description: "Your task has been added successfully!",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to process your request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [messages, onTaskCreated, toast]);
+
+  // Setup speech recognition with memoized handlers
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
@@ -56,43 +93,9 @@ export const VoiceAssistant = ({ onTaskCreated }: VoiceAssistantProps) => {
         recognitionRef.current.stop();
       }
     };
-  }, []);
+  }, [handleUserMessage, toast]);
 
-  const handleUserMessage = async (content: string) => {
-    setIsListening(false);
-    const userMessage: Message = { role: "user", content };
-    setMessages(prev => [...prev, userMessage]);
-    setIsProcessing(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('chat-task-assistant', {
-        body: { messages: [...messages, userMessage] }
-      });
-
-      if (error) throw error;
-
-      setMessages(prev => [...prev, data.message]);
-
-      if (data.task_created) {
-        onTaskCreated();
-        toast({
-          title: "Task Created",
-          description: "Your task has been added successfully!",
-        });
-      }
-    } catch (error: any) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to process your request",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const startListening = () => {
+  const startListening = useCallback(() => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
@@ -107,21 +110,21 @@ export const VoiceAssistant = ({ onTaskCreated }: VoiceAssistantProps) => {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
-  const stopListening = () => {
+  const stopListening = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
     }
-  };
+  }, []);
 
-  const handleSendText = () => {
+  const handleSendText = useCallback(() => {
     if (textInput.trim()) {
       handleUserMessage(textInput);
       setTextInput("");
     }
-  };
+  }, [textInput, handleUserMessage]);
 
   return (
     <>
@@ -148,7 +151,7 @@ export const VoiceAssistant = ({ onTaskCreated }: VoiceAssistantProps) => {
             ) : (
               messages.map((msg, idx) => (
                 <div
-                  key={idx}
+                  key={`${msg.role}-${idx}-${msg.content.substring(0, 20)}`}
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div

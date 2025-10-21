@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { TaskForm } from "@/components/tasks/TaskForm";
@@ -33,14 +33,15 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleSignOut = async () => {
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
     toast({ title: "Signed out successfully" });
-  };
+  }, [toast]);
 
-  const handleTaskAdded = () => {
+  const handleTaskAdded = useCallback(() => {
     setRefreshTasks((prev) => prev + 1);
-  };
+  }, []);
 
   if (loading) {
     return (

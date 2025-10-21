@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +19,24 @@ interface TaskCardProps {
   onTaskUpdated: () => void;
 }
 
-export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
+// Move outside component to avoid recreation on every render
+const getPriorityColor = (priority: string | null) => {
+  switch (priority) {
+    case 'high':
+      return 'bg-red-500/10 text-red-700 border-red-300';
+    case 'medium':
+      return 'bg-yellow-500/10 text-yellow-700 border-yellow-300';
+    case 'low':
+      return 'bg-green-500/10 text-green-700 border-green-300';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
+};
+
+const TaskCardComponent = ({ task, onTaskUpdated }: TaskCardProps) => {
   const { toast } = useToast();
 
-  const handleToggleComplete = async (checked: boolean) => {
+  const handleToggleComplete = useCallback(async (checked: boolean) => {
     try {
       const { error } = await supabase
         .from("tasks")
@@ -42,20 +57,7 @@ export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
         variant: "destructive",
       });
     }
-  };
-
-  const getPriorityColor = (priority: string | null) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-500/10 text-red-700 border-red-300';
-      case 'medium':
-        return 'bg-yellow-500/10 text-yellow-700 border-yellow-300';
-      case 'low':
-        return 'bg-green-500/10 text-green-700 border-green-300';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
+  }, [task.id, toast, onTaskUpdated]);
 
   return (
     <Card className="shadow-sm border-border/50 hover:shadow-md transition-shadow duration-200">
@@ -101,3 +103,6 @@ export const TaskCard = ({ task, onTaskUpdated }: TaskCardProps) => {
     </Card>
   );
 };
+
+// Wrap with memo to prevent unnecessary re-renders when props haven't changed
+export const TaskCard = memo(TaskCardComponent);

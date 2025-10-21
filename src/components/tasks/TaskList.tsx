@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TaskCard } from "./TaskCard";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +29,8 @@ export const TaskList = ({ refresh, todayOnly = false, date }: TaskListProps) =>
   const [sortByPriority, setSortByPriority] = useState(false);
   const { toast } = useToast();
 
-  const fetchTasks = async () => {
+  // Memoize fetchTasks to prevent unnecessary re-renders of TaskCard
+  const fetchTasks = useCallback(async () => {
     try {
       let query = supabase
         .from("tasks")
@@ -57,11 +58,11 @@ export const TaskList = ({ refresh, todayOnly = false, date }: TaskListProps) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, [todayOnly, date, toast]);
 
   useEffect(() => {
     fetchTasks();
-  }, [refresh, todayOnly, date]);
+  }, [fetchTasks, refresh]);
 
   if (loading) {
     return (
@@ -77,14 +78,17 @@ export const TaskList = ({ refresh, todayOnly = false, date }: TaskListProps) =>
     setSortByPriority(!sortByPriority);
   };
 
-  const sortedTasks = sortByPriority
-    ? [...tasks].sort((a, b) => {
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
-        const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-        return bPriority - aPriority;
-      })
-    : tasks;
+  // Memoize sorting to avoid re-computation on every render
+  const sortedTasks = useMemo(() => {
+    if (!sortByPriority) return tasks;
+
+    return [...tasks].sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+      const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+      return bPriority - aPriority;
+    });
+  }, [tasks, sortByPriority]);
 
   if (tasks.length === 0) {
     return (
